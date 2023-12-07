@@ -50,11 +50,11 @@ def main():
 @app.route('/error/')
 def error():
     word = request.args.get('word')
-    suggestions = request.args.get('suggestions')
+    words = request.args.get('suggestions')
     return render_template(
     'error.html',
     word=word,
-    suggestions=suggestions
+    words=words
     )
 
 @app.route('/detail/<keyword>')
@@ -69,12 +69,19 @@ def detail(keyword):
             'error',
             word=keyword
         ))
+    
+    # Check if the keyword already exists in the database
+    existing_word = db.words.find_one({'word': keyword})
+    if existing_word:
+        return render_template('detail.html', word=keyword, definitions=definitions, status='old')
 
     if type(definitions[0]) is str:
+        
         return redirect(url_for(
             'error',
             word=keyword,
-            suggestions=",".join(definitions).strip()
+            suggestions='.'.join(definitions).strip()
+
         ))
     status = request.args.get('status_give', 'new')
     return render_template(
